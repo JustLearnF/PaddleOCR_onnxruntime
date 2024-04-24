@@ -9,7 +9,7 @@
 |-- CMakeLists.txt  
 |-- README.md  
 |-- resource  
-|    |-- dicts  
+|  |-- dicts  
 |    |    `-- sch_dict.txt      // 字典
 |    `-- models
 |        |-- classify.onnx      // 方向分类模型
