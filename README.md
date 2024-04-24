@@ -9,12 +9,12 @@
 |-- CMakeLists.txt  
 |-- README.md  
 |-- resource  
-|   |-- dicts  
-|   |   `-- sch_dict.txt      // 字典
-|   `-- models
-|       |-- classify.onnx      // 方向分类模型
-|       |-- detect.onnx      // 文字检测模型
-|       `-- recognize.onnx      // 文字识别模型
+|    |-- dicts  
+|    |    `-- sch_dict.txt      // 字典
+|    `-- models
+|        |-- classify.onnx      // 方向分类模型
+|        |-- detect.onnx      // 文字检测模型
+|        `-- recognize.onnx      // 文字识别模型
 `-- source  
     |-- Communicate      // socket通讯
     |   |-- CMakeLists.txt  
