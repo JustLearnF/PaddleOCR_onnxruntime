@@ -11,7 +11,7 @@ class RecNetOP {
   };
 
  public:
-  std::vector<std::unique_ptr<std::string>> results;
+  std::vector<std::unique_ptr<std::string>> texts;
 
  private:
   AllocatorWithDefaultOptions allocator;

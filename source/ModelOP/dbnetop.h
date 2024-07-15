@@ -15,14 +15,16 @@ class DBNetOP {
   };
 
  public:
+  cv::Mat *resized_img;
   std::vector<std::unique_ptr<cv::Mat>> text_imgs;
+  std::vector<cv::Rect> rects;
 
  private:
   AllocatorWithDefaultOptions allocator;
   Session *model;
   cv::Mat input_img;
-  cv::Mat *resized_img;
   cv::Mat *operating_img;
+  cv::Mat *tmp_img;
   std::vector<const char *> input_node_names;
   std::vector<const char *> output_node_names;
   ShapeInferContext::Ints input_shape;

@@ -1,5 +1,8 @@
 #pragma once
 #include <onnxruntime_cxx_api.h>
+#include"ModelOP/clsnetop.h"
+#include"ModelOP/dbnetop.h"
+#include"ModelOP/recnetop.h"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -23,6 +26,14 @@ class Loader {
     std::string dict_name = "sch_dict.txt";
   };
 
+  struct Loader_Results
+  {
+    cv::Mat *resized_img;
+    std::vector<cv::Rect> *rects;
+    std::vector<std::unique_ptr<cv::Mat>> *text_imgs;
+    std::vector<std::unique_ptr<std::string>> *texts;
+  };
+
  private:
   fs::path current_path;
   Env *env;
@@ -31,6 +42,9 @@ class Loader {
   std::string dicts_path = LOADER_DICTS_PATH;
   Loader_Names loader_names;
   std::vector<std::string> dict;
+  DBNetOP *dbnetop;
+  ClsNetOP *clsnetop;
+  RecNetOP *recnetop;
 
  public:
   Loader();
@@ -38,12 +52,12 @@ class Loader {
   bool load();
   void release();
   Loader_Names *getLoaderNames();  // 预留接口以便修改模型名和字典名
-  Session *getModel(int id);
-  std::vector<std::string> *getDict();
+  const Loader_Results predict(std::string img_path);
 
  private:
   bool isModelsExist();
   bool loadModel(std::string model_name, Session *&model);
   bool isDictExist();
   bool loadDict();
+  bool loadModelOP();
 };

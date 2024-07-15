@@ -25,7 +25,7 @@ bool Loader::load() {
   return (loadModel(this->loader_names.det_name, this->sessions.detect) &&
           loadModel(this->loader_names.cls_name, this->sessions.classify) &&
           loadModel(this->loader_names.rec_name, this->sessions.recognize) &&
-          loadDict());
+          loadDict() && loadModelOP());
 }
 
 void Loader::release() {
@@ -36,27 +36,23 @@ void Loader::release() {
 
 Loader::Loader_Names* Loader::getLoaderNames() { return &this->loader_names; }
 
-Session* Loader::getModel(int id) {
-  switch (id) {
-    case 1:
-      return this->sessions.detect;
-      break;
-
-    case 2:
-      return this->sessions.classify;
-      break;
-
-    case 3:
-      return this->sessions.recognize;
-      break;
-
-    default:
-      return nullptr;
-      break;
-  }
+const Loader::Loader_Results Loader::predict(std::string img_path) {
+  if (!this->dbnetop->setInputImage(img_path)) return Loader::Loader_Results();
+  this->dbnetop->predict();
+  this->clsnetop->setTextImages(&this->dbnetop->text_imgs);
+  this->clsnetop->predict();
+  this->recnetop->setTextImages(&this->dbnetop->text_imgs);
+  this->recnetop->predict();
+  if (!this->recnetop->texts.empty()) {
+    Loader::Loader_Results results;
+    results.resized_img = this->dbnetop->resized_img;
+    results.rects = &this->dbnetop->rects;
+    results.text_imgs = &this->dbnetop->text_imgs;
+    results.texts = &this->recnetop->texts;
+    return results;
+  } else
+    return Loader::Loader_Results();
 }
-
-std::vector<std::string>* Loader::getDict() { return &this->dict; }
 
 bool Loader::isModelsExist() {
   return (fs::exists(this->current_path / this->models_path /
@@ -90,5 +86,15 @@ bool Loader::loadDict() {
     this->dict.push_back(line);
   }
   this->dict.push_back(" ");
+  return true;
+}
+
+bool Loader::loadModelOP() {
+  if (!this->sessions.classify || !this->sessions.detect ||
+      !this->sessions.recognize || this->dict.empty())
+    return false;
+  this->dbnetop = new DBNetOP(this->sessions.detect);
+  this->clsnetop = new ClsNetOP(this->sessions.classify);
+  this->recnetop = new RecNetOP(this->sessions.recognize, &this->dict);
   return true;
 }

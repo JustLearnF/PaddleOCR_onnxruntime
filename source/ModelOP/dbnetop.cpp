@@ -22,9 +22,14 @@ DBNetOP::~DBNetOP() {}
 
 bool DBNetOP::setInputImage(std::string img_path) {
   if (!this->input_img.empty()) this->input_img.release();
+  if (!this->resized_img && !this->resized_img->empty()) {
+    this->resized_img->release();
+    this->resized_img = nullptr;
+  }
   this->input_img = cv::imread(img_path);
   if (this->input_img.empty()) return false;
   this->text_imgs.clear();
+  this->rects.clear();
   return true;
 }
 
@@ -53,15 +58,15 @@ void DBNetOP::preProcess() {
   this->input_shape[2] = ratio_h * MINIMUM_SIZE;
   this->input_shape[3] = ratio_w * MINIMUM_SIZE;
   // 将bgr图像转换为rgb图像同时进行归一化
-  cv::Mat bgr_resized_img;
-  cv::resize(this->input_img, bgr_resized_img,
+  this->resized_img = new cv::Mat();
+  cv::resize(this->input_img, *this->resized_img,
              cv::Size(this->input_shape[3], this->input_shape[2]));
   cv::Mat rgb_img;
-  cv::cvtColor(bgr_resized_img, rgb_img, cv::COLOR_BGR2RGB);
+  cv::cvtColor(*this->resized_img, rgb_img, cv::COLOR_BGR2RGB);
   cv::Mat rgb_img_float;
-  this->resized_img = new cv::Mat();
-  rgb_img.convertTo(*this->resized_img, CV_32FC3);
-  cv::Mat normlized_resized_img = (*this->resized_img) / 255.0f;
+  this->tmp_img = new cv::Mat();
+  rgb_img.convertTo(*this->tmp_img, CV_32FC3);
+  cv::Mat normlized_resized_img = (*this->tmp_img) / 255.0f;
   std::vector<cv::Mat> channels;
   cv::split(normlized_resized_img, channels);
   this->operating_img = new cv::Mat();
@@ -99,15 +104,14 @@ void DBNetOP::postProcess(float *data) {
       int newH = bounding_rect.height + 2 * offset_h;
       cv::Rect rect = cv::Rect(newX, newY, newW, newH) & resized_img_rect;
       cv::Mat *normlized_resized_img =
-          new cv::Mat((*this->resized_img)(rect) / 255.0f);
+          new cv::Mat((*this->tmp_img)(rect) / 255.0f);
       this->text_imgs.push_back(
           std::unique_ptr<cv::Mat>(normlized_resized_img));
+      this->rects.push_back(rect);
     }
   }
   this->operating_img->release();
-  delete this->operating_img;
   this->operating_img = nullptr;
-  this->resized_img->release();
-  delete this->resized_img;
-  this->resized_img = nullptr;
+  this->tmp_img->release();
+  this->tmp_img = nullptr;
 }

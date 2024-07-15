@@ -24,7 +24,7 @@ void RecNetOP::setTextImages(std::vector<std::unique_ptr<cv::Mat>>* text_imgs) {
 
 void RecNetOP::predict() {
   if (this->text_imgs->empty()) return;
-  this->results.clear();
+  this->texts.clear();
   // 对文本图像进行缩放和归一化
   preProcess();
   for (auto& text_img_ptr : *this->text_imgs) {
@@ -62,7 +62,7 @@ void RecNetOP::preProcess() {
 }
 
 void RecNetOP::postProcess(float* data, ShapeInferContext::Ints shape) {
-  std::string* text = new std::string();
+  auto text = std::make_unique<std::string>();
   // 获取结果中概率最大的下标 然后查询字典将文字存储
   for (int i = 0; i < shape[1]; i++) {
     int label =
@@ -70,5 +70,5 @@ void RecNetOP::postProcess(float* data, ShapeInferContext::Ints shape) {
         &data[i * shape[2]];
     if (label != 0) *text += (*this->dict)[label - 1];
   }
-  this->results.push_back(std::unique_ptr<std::string>(text));
+  this->texts.push_back(std::move(text));
 }
